@@ -1,0 +1,1211 @@
+<title>Aura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ---------------------------------------------------------------------
+     Design tokens — ported 1:1 from src/theme/colors.ts in the real app.
+     Pure black + one ember (red-orange) hue, deliberately single-theme:
+     the product's whole premise is a photophobic user in a dark room, so
+     this never inverts to a light palette regardless of OS setting.
+     --------------------------------------------------------------------- */
+  :root {
+    --bg-page: #050302;          /* page chrome behind the device frame */
+    --bg-device: #000000;        /* the app's own screen — pure black */
+    --surface: #0a0704;
+    --surface-raised: #120b06;
+    --border: #2a180d;
+    --bezel: #14100a;
+    --bezel-edge: #2a1f14;
+
+    --ember-dim: #4a2716;
+    --ember-muted: #7a3d1f;
+    --ember: #a8532b;
+    --ember-bright: #c46a37;
+
+    --text-primary: #c46a37;
+    --text-secondary: #7a4429;
+    --text-disabled: #4a2716;
+
+    --danger-surface: #1a0d05;
+
+    --font-display: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg-page);
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 64px;
+    gap: 28px;
+  }
+
+  ::selection { background: var(--ember-dim); color: var(--text-primary); }
+  :focus-visible { outline: 2px solid var(--ember-bright); outline-offset: 2px; }
+
+  /* ---------- page chrome ---------- */
+  .masthead {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .masthead .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ember-muted);
+  }
+  .masthead h1 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+  .masthead p {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    max-width: 46ch;
+  }
+  .masthead .tag {
+    margin-top: 4px;
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ember-bright);
+    border: 1px solid var(--ember-dim);
+    border-radius: 999px;
+    padding: 4px 10px 4px 8px;
+  }
+  .masthead .tag::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--ember-bright);
+    box-shadow: 0 0 6px var(--ember-bright);
+  }
+
+  /* ---------- device frame ---------- */
+  .frame-wrap { position: relative; }
+  .device {
+    width: 360px;
+    height: 760px;
+    background: var(--bezel);
+    border: 1px solid var(--bezel-edge);
+    border-radius: 46px;
+    padding: 14px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.03) inset,
+      0 40px 80px -30px rgba(0,0,0,0.9),
+      0 10px 30px -10px rgba(0,0,0,0.8);
+    position: relative;
+  }
+  .device::before {
+    /* speaker slit */
+    content: "";
+    position: absolute;
+    top: 30px; left: 50%;
+    transform: translateX(-50%);
+    width: 60px; height: 4px;
+    border-radius: 3px;
+    background: #000;
+  }
+  .screen {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-device);
+    border-radius: 32px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .statusline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px 0;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-disabled);
+    flex-shrink: 0;
+  }
+  .statusline .clock { color: var(--text-secondary); }
+  .device-status { display: flex; align-items: center; gap: 6px; }
+  .device-status .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--ember-dim); }
+  .device-status.connected .dot { background: var(--ember-muted); box-shadow: 0 0 5px var(--ember-muted); }
+
+  .screen-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 20px 12px;
+    scrollbar-width: none;
+  }
+  .screen-body::-webkit-scrollbar { display: none; }
+
+  /* ---------- bottom tab bar ---------- */
+  .tabbar {
+    flex-shrink: 0;
+    display: flex;
+    border-top: 1px solid var(--border);
+    background: var(--bg-device);
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+  .tabbar button {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-disabled);
+    font-family: var(--font-display);
+    font-size: 10.5px;
+    padding: 6px 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+  }
+  .tabbar button .icon { font-size: 15px; line-height: 1; }
+  .tabbar button.active { color: var(--text-primary); }
+
+  /* ---------- typography inside device ---------- */
+  .screen h2 {
+    margin: 0 0 14px;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+  .screen h3 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .caption {
+    font-size: 11px;
+    color: var(--text-disabled);
+    line-height: 1.5;
+  }
+  .label {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  /* ---------- cards ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+
+  /* ---------- big button ---------- */
+  .btn-big {
+    width: 100%;
+    min-height: 76px;
+    border-radius: 20px;
+    border: 2px solid var(--ember);
+    background: var(--surface-raised);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .btn-big .sub { font-size: 12.5px; font-weight: 500; color: var(--text-secondary); }
+  .btn-big.danger { border-color: var(--ember-bright); background: var(--danger-surface); }
+  .btn-big:disabled {
+    border-color: var(--text-disabled);
+    background: var(--bg-device);
+    color: var(--text-disabled);
+    cursor: default;
+  }
+  .btn-big:disabled .sub { color: var(--text-disabled); }
+
+  .btn-secondary {
+    width: 100%;
+    min-height: 48px;
+    border-radius: 12px;
+    border: 2px solid var(--ember-dim);
+    background: var(--bg-device);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  /* ---------- timer ---------- */
+  .timer {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 52px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+  }
+  .timer-caption { text-align: center; margin-bottom: 14px; }
+
+  /* ---------- mode toggles ---------- */
+  .mode-row { display: flex; gap: 8px; margin-bottom: 4px; }
+  .mode-toggle {
+    flex: 1;
+    min-height: 52px;
+    border-radius: 12px;
+    border: 2px solid var(--ember-dim);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  .mode-toggle.active { border-color: var(--ember); background: var(--surface-raised); color: var(--text-primary); }
+  .mode-toggle:disabled { border-color: var(--text-disabled); color: var(--text-disabled); cursor: default; }
+  .mode-toggle .reason { font-size: 9.5px; color: var(--text-disabled); }
+
+  .intensity { margin-top: 12px; }
+  .intensity .row { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 5px; }
+  .intensity .row .val { font-family: var(--font-mono); color: var(--text-primary); font-weight: 600; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--ember-dim);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--ember-bright);
+    cursor: pointer;
+    border: none;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--ember-bright); border: none; cursor: pointer;
+  }
+  input[type="range"]:disabled { opacity: 0.4; }
+  .cap-note { font-size: 10.5px; color: var(--text-disabled); margin-top: 3px; }
+
+  /* ---------- placement chips ---------- */
+  .chip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .chip {
+    min-height: 42px;
+    border-radius: 11px;
+    border: 2px solid var(--ember-dim);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .chip.active { border-color: var(--ember); background: var(--surface-raised); color: var(--text-primary); }
+
+  /* ---------- switch row ---------- */
+  .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; }
+  .switch-row + .switch-row { border-top: 1px solid var(--border); }
+  .switch-text .title { font-size: 14px; color: var(--text-primary); font-weight: 600; }
+  .switch-text .desc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; line-height: 1.4; }
+  .switch {
+    width: 42px; height: 25px; border-radius: 13px;
+    background: var(--ember-dim);
+    border: none; position: relative; cursor: pointer; flex-shrink: 0;
+  }
+  .switch::after {
+    content: ""; position: absolute; top: 2px; left: 2px;
+    width: 21px; height: 21px; border-radius: 50%;
+    background: var(--text-disabled);
+  }
+  .switch.on { background: var(--ember); }
+  .switch.on::after { left: 19px; background: var(--ember-bright); }
+
+  /* ---------- banners ---------- */
+  .banner {
+    border: 2px solid var(--ember-bright);
+    background: var(--danger-surface);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.5;
+    cursor: pointer;
+  }
+  .banner .dismiss { display: block; margin-top: 8px; text-align: right; font-size: 11px; color: var(--text-secondary); }
+
+  /* ---------- section title row ---------- */
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin: 18px 0 8px;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  /* ---------- insights ---------- */
+  .efficacy-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .efficacy-row:last-child { border-bottom: none; }
+  .efficacy-row .name { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+  .efficacy-row .drop { font-family: var(--font-mono); font-size: 13px; color: var(--text-primary); margin-top: 2px; }
+  .efficacy-row .n { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-disabled); margin-top: 2px; }
+
+  .bar-row { margin-bottom: 12px; }
+  .bar-row .top { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; color: var(--text-primary); }
+  .bar-row .top .pct { font-family: var(--font-mono); color: var(--text-secondary); }
+  .bar-track { height: 8px; border-radius: 4px; background: var(--surface-raised); border: 1px solid var(--border); overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--ember-muted); }
+  .bar-row .cap { font-size: 10.5px; color: var(--text-disabled); margin-top: 3px; }
+
+  /* ---------- calendar heatmap ---------- */
+  .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .cal-head button { background: none; border: none; color: var(--text-primary); font-size: 16px; cursor: pointer; padding: 4px 10px; }
+  .cal-head .month { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-dow { font-size: 9.5px; color: var(--text-disabled); text-align: center; padding-bottom: 4px; font-family: var(--font-mono); }
+  .cal-day {
+    aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10.5px; color: var(--text-secondary); font-family: var(--font-mono);
+    cursor: pointer; background: transparent;
+  }
+  .cal-day.blank { visibility: hidden; }
+  .cal-day.today { border-color: var(--ember); border-width: 2px; }
+
+  /* ---------- number scale ---------- */
+  .num-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+  .num-cell {
+    aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--ember-dim);
+    background: transparent; color: var(--text-secondary); font-family: var(--font-mono);
+    font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  .num-cell.active { border-color: var(--ember-bright); border-width: 3px; background: var(--surface-raised); color: var(--text-primary); }
+
+  /* ---------- stepper ---------- */
+  .stepper-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
+  .stepper-row .label { flex: 1; font-size: 13px; color: var(--text-primary); }
+  .stepper-controls { display: flex; align-items: center; gap: 10px; }
+  .stepper-btn {
+    width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--ember-dim);
+    background: transparent; color: var(--text-primary); font-size: 16px; cursor: pointer; line-height: 1;
+  }
+  .stepper-val { font-family: var(--font-mono); font-size: 13px; color: var(--text-primary); min-width: 44px; text-align: center; }
+
+  /* ---------- medication quick add ---------- */
+  .quickadd-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+  .quickadd-btn {
+    border: 2px solid var(--ember-dim); border-radius: 11px; background: transparent;
+    color: var(--text-primary); font-size: 11.5px; font-weight: 600; padding: 8px 11px; cursor: pointer;
+  }
+  .med-count { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-secondary); margin-bottom: 3px; }
+
+  /* ---------- likert ---------- */
+  .likert { margin-bottom: 16px; }
+  .likert .q { font-size: 13px; color: var(--text-primary); margin-bottom: 8px; }
+  .likert-row { display: flex; align-items: center; justify-content: space-between; }
+  .likert-end { font-size: 9.5px; color: var(--text-disabled); width: 40px; }
+  .likert-dot {
+    width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--ember-dim);
+    background: transparent; color: var(--text-secondary); font-family: var(--font-mono); font-size: 11px; cursor: pointer;
+  }
+  .likert-dot.active { border-color: var(--ember-bright); background: var(--surface-raised); color: var(--text-primary); }
+
+  /* ---------- modal / sheet ---------- */
+  .sheet-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.88);
+    display: flex; align-items: flex-end; opacity: 0; pointer-events: none;
+    transition: opacity 120ms ease; z-index: 20; border-radius: 32px; overflow: hidden;
+  }
+  .sheet-overlay.open { opacity: 1; pointer-events: auto; }
+  .sheet {
+    width: 100%; max-height: 88%; overflow-y: auto;
+    background: var(--surface); border-top: 2px solid var(--ember-dim);
+    border-radius: 22px 22px 0 0; padding: 20px 20px 26px;
+  }
+  .sheet h3 { font-size: 17px; text-align: center; margin-bottom: 4px; }
+  .sheet .lede { text-align: center; font-size: 12px; color: var(--text-secondary); margin-bottom: 14px; }
+  .sheet-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .sheet-actions button { flex: 1; min-height: 48px; border-radius: 12px; font-family: var(--font-display); font-size: 14px; font-weight: 700; cursor: pointer; }
+  .sheet-actions .skip { border: 2px solid var(--ember-dim); background: transparent; color: var(--text-secondary); }
+  .sheet-actions .go { border: 2px solid var(--ember); background: var(--surface-raised); color: var(--text-primary); }
+  .sheet-actions .go:disabled { border-color: var(--text-disabled); color: var(--text-disabled); }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 7px; }
+  .tag-chip {
+    border: 2px solid var(--ember-dim); border-radius: 20px; background: transparent;
+    color: var(--text-secondary); font-size: 11.5px; padding: 7px 12px; cursor: pointer;
+  }
+  .tag-chip.active { border-color: var(--ember); background: var(--surface-raised); color: var(--text-primary); }
+
+  textarea {
+    width: 100%; min-height: 74px; background: transparent; border: 2px solid var(--ember-dim);
+    border-radius: 12px; color: var(--text-primary); font-family: var(--font-display); font-size: 13px;
+    padding: 10px; resize: none;
+  }
+  textarea::placeholder { color: var(--text-disabled); }
+
+  /* ---------- pdf preview ---------- */
+  .pdf-page {
+    background: #ece7de; color: #1a1410; border-radius: 6px; padding: 18px;
+    font-family: var(--font-display); font-size: 11px; line-height: 1.5;
+  }
+  .pdf-page h4 { margin: 0 0 2px; font-size: 15px; }
+  .pdf-page .meta { color: #6b5f52; font-size: 9.5px; margin-bottom: 12px; }
+  .pdf-page table { width: 100%; border-collapse: collapse; font-size: 9.5px; margin-bottom: 12px; }
+  .pdf-page th, .pdf-page td { border: 1px solid #c9c0b2; padding: 4px 6px; text-align: left; }
+  .pdf-page th { background: #ddd4c4; }
+  .pdf-page .section { font-weight: 700; font-size: 11px; margin: 12px 0 4px; }
+  .pdf-page .disclaimer { font-size: 8.5px; color: #857a6b; border-top: 1px solid #c9c0b2; padding-top: 6px; margin-top: 10px; }
+
+  /* ---------- first launch ---------- */
+  .fl-body { padding: 22px 20px; }
+  .fl-body h2 { font-size: 21px; margin-bottom: 16px; }
+  .fl-body p { font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+  .fl-body li { font-size: 13px; line-height: 1.7; color: var(--text-primary); }
+  .fl-body ul { margin: 0 0 10px; padding-left: 18px; }
+
+  .hint-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 14px; }
+  .hint-row .caption { text-align: center; }
+
+  @media (max-width: 420px) {
+    .device { width: 92vw; height: calc(92vw * 2.11); max-height: 78vh; }
+  }
+</style>
+
+<div class="masthead">
+  <div class="eyebrow">Companion app · visual prototype</div>
+  <h1>Aura</h1>
+  <p>A companion app for a wearable migraine-relief headband — closes the control loop between three mechanical relief modes and a clinician-ready headache diary. Built for a user who's mid-migraine, light-sensitive, and has one working thumb.</p>
+  <span class="tag">Click through — no build required</span>
+</div>
+
+<div class="frame-wrap">
+  <div class="device">
+    <div class="screen" id="screen">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<div class="hint-row">
+  <span class="caption">Fully interactive · demo data seeded · session timing sped up ~12×</span>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ======================= tiny persisted prefs only ======================= */
+  function loadPrefs() {
+    try {
+      var raw = localStorage.getItem('aura-proto-prefs');
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+  function savePrefs(p) {
+    try { localStorage.setItem('aura-proto-prefs', JSON.stringify(p)); } catch (e) {}
+  }
+  var prefs = loadPrefs();
+
+  /* ======================= demo seed data ======================= */
+  var MODE_LABEL = { paddles: 'Paddles', vibration: 'Vibration', rotation: 'Rotation' };
+  var PLACEMENT_LABEL = { temples: 'your temples', occipital: 'the back of your head', neck: 'your neck', wrist: 'your wrist' };
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function dateKey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function daysAgo(n) { var d = new Date(); d.setDate(d.getDate() - n); return d; }
+
+  // Efficacy demo rows — Rotation at temples has n>=10 so the confident recommendation shows.
+  var efficacyRows = [
+    { mode: 'rotation', placement: 'temples', n: 12, totalSessions: 13, meanDrop: 2.8 },
+    { mode: 'paddles', placement: 'temples', n: 11, totalSessions: 11, meanDrop: 1.6 },
+    { mode: 'vibration', placement: 'neck', n: 10, totalSessions: 12, meanDrop: 0.4 },
+    { mode: 'paddles', placement: 'occipital', n: 6, totalSessions: 6, meanDrop: 1.9 },
+    { mode: 'rotation', placement: 'wrist', n: 3, totalSessions: 4, meanDrop: 0.8 },
+  ].sort(function (a, b) { return b.meanDrop - a.meanDrop; });
+
+  var reliefDistribution = [
+    { bucket: 'Relief within 30 min', pct: 38, count: 17 },
+    { bucket: 'Relief by 2 hours', pct: 24, count: 11 },
+    { bucket: 'No meaningful relief by 2h', pct: 21, count: 9 },
+    { bucket: 'No follow-up data', pct: 17, count: 8 },
+  ];
+
+  // Headache-day heatmap for the current month, seeded with a plausible pattern.
+  var today = new Date();
+  var heatmapSeed = {};
+  [2, 5, 6, 11, 12, 13, 19, 24].forEach(function (day, i) {
+    if (day <= today.getDate()) heatmapSeed[day] = [3, 6, 7, 4, 8, 5, 6, 3][i];
+  });
+
+  var medicationDemo = { triptanComboDays: 8, triptanComboThreshold: 10, simpleDays: 3, simpleThreshold: 15 };
+
+  var correlationFactors = [
+    { label: 'Stress level', r: 0.58, n: 62 },
+    { label: 'Sleep hours', r: -0.41, n: 62 },
+    { label: 'Day-over-day pressure change', r: 0.33, n: 55 },
+    { label: 'Screen time', r: 0.22, n: 62 },
+    { label: 'Caffeine servings', r: 0.11, n: 62 },
+  ];
+
+  var latestMidas = { totalScore: 14, grade: 3, date: 'Jun 2, 2026' };
+
+  /* ======================= state ======================= */
+  var state = {
+    tab: prefs.tab || 'attack',
+    firstLaunchAcked: !!prefs.firstLaunchAcked,
+
+    device: { connection: 'connected', battery: 78 }, // prototype: always "simulated & connected"
+
+    sessionPhase: 'idle', // idle | baseline | active | cooldown
+    elapsed: 0,
+    cooldownRemaining: 0,
+    modes: { paddles: true, vibration: false, rotation: false },
+    intensities: { paddles: 60, vibration: 60, rotation: 60 },
+    placement: 'temples',
+    quietMode: false,
+    baselinePain: null,
+
+    checkinPending: null, // { atMinutes: 30|120 }
+    checkinsFired: { 30: false, 120: false },
+    mohDismissed: false,
+
+    // diary
+    calMonthOffset: 0,
+    dayModalDate: null,
+    dayModalDraft: null,
+
+    // export
+    showMidasForm: false,
+    midasAnswers: { q1: 2, q2: 1, q3: 3, q4: 0, q5: 4, days: 22, pain: 6 },
+    showPdfPreview: false,
+
+    // settings
+    researchMode: !!prefs.researchMode,
+    trackCycle: !!prefs.trackCycle,
+    notifications: !!prefs.notifications,
+    showSafety: false,
+    showResearchSurvey: false,
+    likert: { donning: null, comfort: null, pressure: null, soothing: null, discreteness: null },
+  };
+
+  var MAX_SESSION_SEC = 20 * 60;
+  var COOLDOWN_SEC = 10 * 60;
+  var TIME_SCALE = 12; // simulated seconds per real second, so a demo session doesn't take 20 real minutes
+  var timerHandle = null;
+
+  /* ======================= helpers ======================= */
+  function clockStr(totalSec) {
+    var m = Math.floor(totalSec / 60), s = Math.floor(totalSec % 60);
+    return pad(m) + ':' + pad(s);
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function el(sel) { return document.querySelector(sel); }
+  function persistPrefs() {
+    savePrefs({
+      tab: state.tab, firstLaunchAcked: state.firstLaunchAcked,
+      researchMode: state.researchMode, trackCycle: state.trackCycle, notifications: state.notifications,
+    });
+  }
+
+  /* ======================= session engine (compressed time) ======================= */
+  function startTicking() {
+    if (timerHandle) return;
+    timerHandle = setInterval(tick, 1000);
+  }
+  function stopTicking() {
+    clearInterval(timerHandle);
+    timerHandle = null;
+  }
+  function tick() {
+    if (state.sessionPhase === 'active') {
+      state.elapsed += TIME_SCALE;
+      if (!state.checkinsFired[30] && state.elapsed >= 40) {
+        state.checkinsFired[30] = true;
+        state.checkinPending = { atMinutes: 30 };
+      }
+      if (state.elapsed >= MAX_SESSION_SEC) {
+        endSession();
+      }
+      render();
+    } else if (state.sessionPhase === 'cooldown') {
+      state.cooldownRemaining = Math.max(0, state.cooldownRemaining - TIME_SCALE);
+      if (!state.checkinsFired[120] && state.elapsed + (COOLDOWN_SEC - state.cooldownRemaining) >= 95) {
+        state.checkinsFired[120] = true;
+        if (!state.checkinPending) state.checkinPending = { atMinutes: 120 };
+      }
+      if (state.cooldownRemaining <= 0) {
+        state.sessionPhase = 'idle';
+        stopTicking();
+      }
+      render();
+    } else {
+      stopTicking();
+    }
+  }
+
+  function startSession() {
+    if (state.sessionPhase !== 'idle') return;
+    state.sessionPhase = 'active';
+    state.elapsed = 0;
+    state.baselinePain = null;
+    state.checkinsFired = { 30: false, 120: false };
+    state.checkinPending = null;
+    startTicking();
+    render();
+  }
+
+  function endSession() {
+    state.sessionPhase = 'cooldown';
+    state.cooldownRemaining = COOLDOWN_SEC;
+    render();
+  }
+
+  /* ======================= actions ======================= */
+  var actions = {
+    setTab: function (t) { state.tab = t; persistPrefs(); render(); },
+    startSession: startSession,
+    stopSession: endSession,
+    toggleMode: function (k) {
+      if (state.quietMode && k === 'rotation') return;
+      state.modes[k] = !state.modes[k];
+      render();
+    },
+    setIntensity: function (k, v) {
+      state.intensities[k] = Number(v);
+      render();
+    },
+    setPlacement: function (p) { state.placement = p; render(); },
+    toggleQuiet: function () {
+      state.quietMode = !state.quietMode;
+      if (state.quietMode) {
+        state.modes.rotation = false;
+        if (state.intensities.paddles > 50) state.intensities.paddles = 50;
+      }
+      render();
+    },
+    submitBaseline: function (n) { state.baselinePain = n; render(); },
+    dismissBaseline: function () { state.baselinePain = -1; render(); }, // -1 = explicitly skipped
+    dismissMoh: function () { state.mohDismissed = true; render(); },
+    openCheckin: function () { render({ checkinOpen: true }); },
+    submitCheckin: function () {
+      state.checkinPending = null;
+      render();
+    },
+
+    calPrevMonth: function () { state.calMonthOffset--; render(); },
+    calNextMonth: function () { if (state.calMonthOffset < 0) state.calMonthOffset++; render(); },
+    openDay: function (dnum) {
+      state.dayModalDate = dnum;
+      state.dayModalDraft = { severity: heatmapSeed[dnum] || 5, sleep: 7, caffeine: 1, screen: 4, stress: 3, skipped: false };
+      render();
+    },
+    closeDay: function () { state.dayModalDate = null; render(); },
+    setDayField: function (f, v) { state.dayModalDraft[f] = v; render(); },
+    saveDay: function () {
+      heatmapSeed[state.dayModalDate] = state.dayModalDraft.severity;
+      state.dayModalDate = null;
+      render();
+    },
+    logMed: function (cat) {
+      if (cat === 'simple') medicationDemo.simpleDays = Math.min(medicationDemo.simpleThreshold + 2, medicationDemo.simpleDays + 1);
+      else medicationDemo.triptanComboDays = Math.min(medicationDemo.triptanComboThreshold + 2, medicationDemo.triptanComboDays + 1);
+      render();
+    },
+
+    openMidasForm: function () { state.showMidasForm = true; render(); },
+    closeMidasForm: function () { state.showMidasForm = false; render(); },
+    setMidas: function (k, v) { state.midasAnswers[k] = Math.max(0, v); render(); },
+    saveMidas: function () {
+      var a = state.midasAnswers;
+      latestMidas.totalScore = a.q1 + a.q2 + a.q3 + a.q4 + a.q5;
+      latestMidas.grade = latestMidas.totalScore <= 5 ? 1 : latestMidas.totalScore <= 10 ? 2 : latestMidas.totalScore <= 20 ? 3 : 4;
+      latestMidas.date = 'Just now';
+      state.showMidasForm = false;
+      render();
+    },
+    openPdfPreview: function () { state.showPdfPreview = true; render(); },
+    closePdfPreview: function () { state.showPdfPreview = false; render(); },
+
+    toggleResearch: function () { state.researchMode = !state.researchMode; persistPrefs(); render(); },
+    toggleCycle: function () { state.trackCycle = !state.trackCycle; persistPrefs(); render(); },
+    toggleNotifs: function () { state.notifications = !state.notifications; persistPrefs(); render(); },
+    openSafety: function () { state.showSafety = true; render(); },
+    closeSafety: function () { state.showSafety = false; render(); },
+    openResearchSurvey: function () { state.showResearchSurvey = true; render(); },
+    closeResearchSurvey: function () { state.showResearchSurvey = false; render(); },
+    setLikert: function (k, v) { state.likert[k] = v; render(); },
+    submitResearchSurvey: function () { state.showResearchSurvey = false; render(); },
+
+    acknowledgeFirstLaunch: function () { state.firstLaunchAcked = true; persistPrefs(); render(); },
+  };
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-action]');
+    if (!t) return;
+    var name = t.getAttribute('data-action');
+    var arg = t.getAttribute('data-arg');
+    var arg2 = t.getAttribute('data-arg2');
+    if (!actions[name]) return;
+    if (arg2 !== null) actions[name](arg, arg2);
+    else if (arg !== null) actions[name](isNaN(arg) ? arg : Number(arg));
+    else actions[name]();
+  });
+  document.addEventListener('input', function (e) {
+    var t = e.target.closest('[data-input]');
+    if (!t) return;
+    var name = t.getAttribute('data-input');
+    var arg = t.getAttribute('data-arg');
+    if (actions[name]) actions[name](arg, t.value);
+  });
+
+  /* ======================= screen renderers ======================= */
+
+  function renderStatusline() {
+    var conn = state.device.connection === 'connected';
+    return (
+      '<div class="statusline">' +
+        '<span class="clock">' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</span>' +
+        '<div class="device-status' + (conn ? ' connected' : '') + '">' +
+          '<span class="dot"></span><span>AURA-SIM · ' + state.device.battery + '%</span>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderTabbar() {
+    var tabs = [
+      { k: 'attack', icon: '●', label: 'Attack' },
+      { k: 'insights', icon: '▲', label: 'Insights' },
+      { k: 'diary', icon: '▦', label: 'Diary' },
+      { k: 'export', icon: '↥', label: 'Export' },
+      { k: 'settings', icon: '◐', label: 'Settings' },
+    ];
+    return '<div class="tabbar">' + tabs.map(function (t) {
+      return '<button class="' + (state.tab === t.k ? 'active' : '') + '" data-action="setTab" data-arg="' + t.k + '">' +
+        '<span class="icon">' + t.icon + '</span><span>' + t.label + '</span></button>';
+    }).join('') + '</div>';
+  }
+
+  function renderFirstLaunch() {
+    return (
+      '<div class="fl-body">' +
+        '<h2>Before you start</h2>' +
+        '<div class="card">' +
+          '<p style="margin:0">Aura is a wellness device. It does not diagnose or treat migraine, and nothing in this app is medical advice. It offers non-medication mechanical relief and helps you track what happens when you use it.</p>' +
+        '</div>' +
+        '<div class="card">' +
+          '<h3>Seek medical care if you have:</h3>' +
+          '<ul>' +
+            '<li>A sudden, severe headache unlike any before</li>' +
+            '<li>Headache with fever, stiff neck, or confusion</li>' +
+            '<li>Headache with weakness, numbness, or vision loss</li>' +
+            '<li>A head injury before the headache started</li>' +
+            '<li>A change in your usual headache pattern</li>' +
+          '</ul>' +
+          '<p style="margin:0;color:var(--text-primary);font-weight:600">These need urgent medical evaluation — do not wait for this app or the device to help.</p>' +
+        '</div>' +
+        '<button class="btn-big" data-action="acknowledgeFirstLaunch">I understand</button>' +
+      '</div>'
+    );
+  }
+
+  function mohMessage() {
+    var d = medicationDemo;
+    if (d.triptanComboDays > d.triptanComboThreshold) {
+      return "You're at " + d.triptanComboDays + " of " + d.triptanComboThreshold + " triptan/combination-analgesic days this month. This is worth discussing with a clinician. The bandana is a non-medication option today.";
+    }
+    if (d.triptanComboDays >= d.triptanComboThreshold - 1) {
+      return "You're at " + d.triptanComboDays + " of " + d.triptanComboThreshold + " triptan/combination-analgesic days this month. The bandana is a non-medication option today.";
+    }
+    return null;
+  }
+
+  function renderAttack() {
+    var s = state, html = '';
+    html += renderStatusline();
+    html += '<div class="screen-body">';
+    html += '<h2>Attack Mode</h2>';
+
+    var moh = mohMessage();
+    if (moh && !s.mohDismissed && s.sessionPhase !== 'active') {
+      html += '<div class="banner" data-action="dismissMoh">' + esc(moh) + '<span class="dismiss">Dismiss</span></div>';
+    }
+    if (s.checkinPending && s.sessionPhase !== 'active') {
+      html += '<div class="banner" data-action="openCheckin">Rate how you feel now — ' + (s.checkinPending.atMinutes === 30 ? '30-minute' : '2-hour') + ' check-in is ready.</div>';
+    }
+
+    if (s.sessionPhase === 'active') {
+      html += '<div class="timer">' + clockStr(s.elapsed) + '</div>';
+      html += '<div class="timer-caption caption" style="text-align:center">Auto-stop in ' + clockStr(Math.max(0, MAX_SESSION_SEC - s.elapsed)) + '</div>';
+      html += '<button class="btn-big danger" data-action="stopSession">Stop</button>';
+    } else if (s.sessionPhase === 'cooldown') {
+      html += '<button class="btn-big" disabled>Cooldown<span class="sub">' + clockStr(s.cooldownRemaining) + ' until you can start again</span></button>';
+    } else {
+      html += '<button class="btn-big" data-action="startSession">Start Relief</button>';
+    }
+
+    html += '<div class="section-label">Modes</div>';
+    html += '<div class="mode-row">';
+    ['paddles', 'vibration', 'rotation'].forEach(function (k) {
+      var disabled = s.quietMode && k === 'rotation';
+      html += '<button class="mode-toggle ' + (s.modes[k] ? 'active' : '') + '" ' + (disabled ? 'disabled' : '') +
+        ' data-action="toggleMode" data-arg="' + k + '">' + MODE_LABEL[k] +
+        (disabled ? '<span class="reason">Off · Quiet</span>' : '') + '</button>';
+    });
+    html += '</div>';
+
+    ['paddles', 'vibration', 'rotation'].forEach(function (k) {
+      if (!s.modes[k]) return;
+      var max = (s.quietMode && k === 'paddles') ? 50 : 100;
+      var val = Math.min(s.intensities[k], max);
+      html += '<div class="intensity"><div class="row"><span>' + MODE_LABEL[k] + ' intensity</span><span class="val">' + val + '%</span></div>' +
+        '<input type="range" min="0" max="' + max + '" step="5" value="' + val + '" data-input="setIntensity" data-arg="' + k + '">' +
+        (max < 100 ? '<div class="cap-note">Capped at ' + max + '% — Quiet mode</div>' : '') + '</div>';
+    });
+
+    html += '<div class="section-label">Placement</div>';
+    html += '<div class="chip-grid">';
+    ['temples', 'occipital', 'neck', 'wrist'].forEach(function (p) {
+      html += '<button class="chip ' + (s.placement === p ? 'active' : '') + '" data-action="setPlacement" data-arg="' + p + '">' + p[0].toUpperCase() + p.slice(1) + '</button>';
+    });
+    html += '</div>';
+
+    html += '<div class="switch-row" style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">' +
+      '<div class="switch-text"><div class="title">Quiet mode</div><div class="desc">Caps paddle speed, disables rotation (the loudest actuator)</div></div>' +
+      '<button class="switch ' + (s.quietMode ? 'on' : '') + '" data-action="toggleQuiet"></button></div>';
+
+    html += '</div>'; // screen-body
+
+    // baseline sheet
+    var baselineOpen = s.sessionPhase === 'active' && s.baselinePain === null;
+    html += renderBaselineSheet(baselineOpen);
+    // checkin sheet
+    html += renderCheckinSheet(!!s.checkinPending && s.sessionPhase !== 'active');
+
+    html += renderTabbar();
+    return html;
+  }
+
+  function renderBaselineSheet(open) {
+    return (
+      '<div class="sheet-overlay ' + (open ? 'open' : '') + '"><div class="sheet">' +
+        '<h3>Pain right now?</h3>' +
+        '<div class="num-grid">' + [0,1,2,3,4,5,6,7,8,9,10].map(function (n) {
+          return '<button class="num-cell" data-action="submitBaseline" data-arg="' + n + '">' + n + '</button>';
+        }).join('') + '</div>' +
+        '<div class="sheet-actions">' +
+          '<button class="skip" data-action="dismissBaseline">Skip</button>' +
+        '</div>' +
+      '</div></div>'
+    );
+  }
+
+  function renderCheckinSheet(open) {
+    var mins = state.checkinPending ? state.checkinPending.atMinutes : 30;
+    return (
+      '<div class="sheet-overlay ' + (open ? 'open' : '') + '"><div class="sheet">' +
+        '<h3>' + (mins === 30 ? '30-minute check-in' : '2-hour check-in') + '</h3>' +
+        '<div class="lede">How is your pain now?</div>' +
+        '<div class="num-grid">' + [0,1,2,3,4,5,6,7,8,9,10].map(function (n) {
+          return '<button class="num-cell" data-action="submitCheckin" data-arg="' + n + '">' + n + '</button>';
+        }).join('') + '</div>' +
+        '<div class="lede" style="margin-top:10px">Anything else going on? (optional)</div>' +
+        '<div class="tag-row">' + ['Nausea', 'Aura', 'Light sensitivity', 'Sound sensitivity'].map(function (t) {
+          return '<button class="tag-chip">' + t + '</button>';
+        }).join('') + '</div>' +
+        '<div class="sheet-actions"><button class="skip" data-action="submitCheckin">Skip</button></div>' +
+      '</div></div>'
+    );
+  }
+
+  function renderInsights() {
+    var confident = efficacyRows.filter(function (r) { return r.n >= 10; });
+    var best = confident[0], contrast = confident.filter(function (r) { return r.mode !== best.mode; })[0];
+    var recommendation = MODE_LABEL[best.mode] + ' at ' + PLACEMENT_LABEL[best.placement] + ' averages a ' + best.meanDrop.toFixed(1) + '-point drop.' +
+      (contrast ? ' ' + MODE_LABEL[contrast.mode] + ' averages ' + contrast.meanDrop.toFixed(1) + '.' : '') +
+      ' Try ' + MODE_LABEL[best.mode] + ' first.';
+
+    var html = renderStatusline() + '<div class="screen-body"><h2>Insights</h2>';
+    html += '<div class="card"><h3>What’s working</h3><p style="font-size:13px;color:var(--text-primary);line-height:1.5;margin:0">' + esc(recommendation) + '</p></div>';
+
+    html += '<div class="card"><h3>Per-modality efficacy</h3><p class="caption" style="margin:0 0 8px">Mean point-drop at 2 hours. Single-mode sessions only.</p>';
+    efficacyRows.forEach(function (r) {
+      html += '<div class="efficacy-row"><div class="name">' + MODE_LABEL[r.mode] + ' · ' + PLACEMENT_LABEL[r.placement] + '</div>' +
+        '<div class="drop">' + r.meanDrop.toFixed(1) + '-pt drop</div>' +
+        '<div class="n">n=' + r.n + (r.n < 10 ? ' — need ' + (10 - r.n) + ' more for confidence' : '') + '</div></div>';
+    });
+    html += '</div>';
+
+    html += '<div class="card"><h3>Time-to-relief</h3><p class="caption" style="margin:0 0 10px">Based on 30-minute and 2-hour check-ins.</p>';
+    reliefDistribution.forEach(function (d) {
+      html += '<div class="bar-row"><div class="top"><span>' + d.bucket + '</span><span class="pct">' + d.pct + '%</span></div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + d.pct + '%"></div></div>' +
+        '<div class="cap">' + d.count + ' sessions</div></div>';
+    });
+    html += '</div>';
+
+    html += '</div>' + renderTabbar();
+    return html;
+  }
+
+  function renderCalendar() {
+    var base = new Date(today.getFullYear(), today.getMonth() + state.calMonthOffset, 1);
+    var monthLabel = base.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    var daysInMonth = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+    var leading = base.getDay();
+    var html = '<div class="cal-head"><button data-action="calPrevMonth">‹</button><span class="month">' + monthLabel + '</span><button data-action="calNextMonth">›</button></div>';
+    html += '<div class="cal-grid">';
+    ['S','M','T','W','T','F','S'].forEach(function (d) { html += '<div class="cal-dow">' + d + '</div>'; });
+    for (var i = 0; i < leading; i++) html += '<div class="cal-day blank"></div>';
+    for (var d = 1; d <= daysInMonth; d++) {
+      var sev = state.calMonthOffset === 0 ? heatmapSeed[d] : undefined;
+      var opacity = sev ? (0.25 + (sev / 10) * 0.75) : 0;
+      var isToday = state.calMonthOffset === 0 && d === today.getDate();
+      html += '<button class="cal-day' + (isToday ? ' today' : '') + '" style="background:rgba(196,106,55,' + opacity + ')" ' +
+        (state.calMonthOffset === 0 ? 'data-action="openDay" data-arg="' + d + '"' : 'disabled') + '>' + d + '</button>';
+    }
+    html += '</div><p class="caption" style="margin-top:8px">Tap a day to log headache severity, daily factors, and weather.</p>';
+    return html;
+  }
+
+  function renderDiary() {
+    var html = renderStatusline() + '<div class="screen-body"><h2>Diary</h2>';
+    html += '<div class="card">' + renderCalendar() + '</div>';
+
+    var moh = mohMessage();
+    html += '<div class="card"><h3>Acute medication</h3><p class="caption" style="margin:0 0 10px">Logging helps flag medication overuse headache risk early.</p>';
+    if (moh) html += '<div class="banner" style="margin-bottom:12px">' + esc(moh) + '</div>';
+    html += '<div class="quickadd-row">' +
+      '<button class="quickadd-btn" data-action="logMed" data-arg="triptan">+ Triptan</button>' +
+      '<button class="quickadd-btn" data-action="logMed" data-arg="triptan">+ Combination analgesic</button>' +
+      '<button class="quickadd-btn" data-action="logMed" data-arg="simple">+ Simple analgesic</button>' +
+      '</div>';
+    html += '<div class="med-count">Triptan/combo: ' + medicationDemo.triptanComboDays + '/' + medicationDemo.triptanComboThreshold + ' days</div>';
+    html += '<div class="med-count">Simple analgesic: ' + medicationDemo.simpleDays + '/' + medicationDemo.simpleThreshold + ' days</div>';
+    html += '</div>';
+
+    html += '<div class="card"><h3>Patterns</h3><p class="caption" style="margin:0 0 10px">62/60 days logged — these are associations in your own data, not proof of cause.</p>';
+    correlationFactors.forEach(function (f) {
+      var pct = Math.round(Math.abs(f.r) * 100);
+      var strength = Math.abs(f.r) >= 0.5 ? 'Strong' : Math.abs(f.r) >= 0.3 ? 'Moderate' : Math.abs(f.r) >= 0.1 ? 'Weak' : 'No clear';
+      html += '<div class="bar-row"><div class="top"><span>' + f.label + '</span><span class="pct">' + pct + '%</span></div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="cap">' + strength + ' association · ' + (f.r > 0 ? 'higher = more severe' : 'higher = less severe') + ' · n=' + f.n + '</div></div>';
+    });
+    html += '</div>';
+
+    html += '</div>';
+    html += renderDayModal();
+    html += renderTabbar();
+    return html;
+  }
+
+  function renderDayModal() {
+    var open = state.dayModalDate !== null;
+    if (!open) return '<div class="sheet-overlay"><div class="sheet"></div></div>';
+    var d = state.dayModalDraft;
+    var monthLabel = today.toLocaleDateString(undefined, { month: 'short' });
+    var html = '<div class="sheet-overlay open"><div class="sheet">';
+    html += '<h3>' + monthLabel + ' ' + state.dayModalDate + '</h3>';
+    html += '<div class="section-label">Headache severity</div>';
+    html += '<div class="num-grid">' + [0,1,2,3,4,5,6,7,8,9,10].map(function (n) {
+      return '<button class="num-cell ' + (d.severity === n ? 'active' : '') + '" data-action="setDayField" data-arg="severity" data-arg2="' + n + '">' + n + '</button>';
+    }).join('') + '</div>';
+    html += '<div class="section-label">Daily factors</div>';
+    html += stepperRow('Sleep', 'sleep', d.sleep, 'h');
+    html += stepperRow('Caffeine', 'caffeine', d.caffeine, ' servings');
+    html += stepperRow('Screen time', 'screen', d.screen, 'h');
+    html += stepperRow('Stress (1–5)', 'stress', d.stress, '');
+    html += '<div class="switch-row"><div class="switch-text"><div class="title">Skipped a meal</div></div>' +
+      '<button class="switch ' + (d.skipped ? 'on' : '') + '" data-action="setDayField" data-arg="skipped" data-arg2="' + (!d.skipped) + '"></button></div>';
+    html += '<div class="section-label">Weather</div><p class="label" style="margin:0">71°F · 1014 hPa <span class="caption">(auto-pulled from location)</span></p>';
+    html += '<div class="sheet-actions"><button class="skip" data-action="closeDay">Cancel</button><button class="go" data-action="saveDay">Save</button></div>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function stepperRow(label, field, val, unit) {
+    return '<div class="stepper-row"><span class="label">' + label + '</span><div class="stepper-controls">' +
+      '<button class="stepper-btn" data-action="setDayField" data-arg="' + field + '" data-arg2="' + Math.max(0, val - 1) + '">–</button>' +
+      '<span class="stepper-val">' + val + unit + '</span>' +
+      '<button class="stepper-btn" data-action="setDayField" data-arg="' + field + '" data-arg2="' + (val + 1) + '">+</button>' +
+      '</div></div>';
+  }
+
+  function renderExport() {
+    var html = renderStatusline() + '<div class="screen-body"><h2>Export</h2>';
+    html += '<div class="card"><h3>Headache diary PDF</h3><p class="caption" style="margin:0 0 12px">Headache days per month, mean severity, duration, acute medication days, device usage, and MIDAS — the format a neurologist expects.</p>' +
+      '<button class="btn-secondary" data-action="openPdfPreview">Generate PDF</button></div>';
+    html += '<div class="card"><h3>MIDAS assessment</h3><p class="label" style="margin:0 0 10px">Last score: ' + latestMidas.totalScore + ' (Grade ' + latestMidas.grade + ') · ' + latestMidas.date + '</p>' +
+      '<button class="btn-secondary" data-action="openMidasForm">Complete MIDAS</button></div>';
+    html += '</div>';
+    html += renderMidasSheet();
+    html += renderPdfSheet();
+    html += renderTabbar();
+    return html;
+  }
+
+  function renderMidasSheet() {
+    var open = state.showMidasForm;
+    var a = state.midasAnswers;
+    var questions = [
+      ['q1', 'Days missed work/school due to headache'],
+      ['q2', 'Days productivity halved (not already counted)'],
+      ['q3', 'Days missed household work'],
+      ['q4', 'Days household productivity halved'],
+      ['q5', 'Days missed family/social/leisure activities'],
+    ];
+    var html = '<div class="sheet-overlay ' + (open ? 'open' : '') + '"><div class="sheet">';
+    html += '<h3>MIDAS assessment</h3><div class="lede">Over the last 3 months — how many days?</div>';
+    questions.forEach(function (q) {
+      html += stepperRow(q[1], q[0], a[q[0]], '');
+    });
+    html += '<div class="sheet-actions"><button class="skip" data-action="closeMidasForm">Cancel</button><button class="go" data-action="saveMidas">Save</button></div>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderPdfSheet() {
+    var open = state.showPdfPreview;
+    var html = '<div class="sheet-overlay ' + (open ? 'open' : '') + '"><div class="sheet">';
+    html += '<h3>PDF preview</h3>';
+    html += '<div class="pdf-page">' +
+      '<h4>Aura Headache Diary</h4>' +
+      '<div class="meta">Generated just now · Local-first export, no cloud storage</div>' +
+      '<div class="section">Monthly summary</div>' +
+      '<table><tr><th>Month</th><th>HA days</th><th>Mean sev.</th><th>Med days</th><th>Sessions</th></tr>' +
+      '<tr><td>Jul 2026</td><td>9</td><td>6.1</td><td>7</td><td>14</td></tr>' +
+      '<tr><td>Jun 2026</td><td>11</td><td>6.8</td><td>9</td><td>17</td></tr></table>' +
+      '<div class="section">MIDAS</div>' +
+      '<table><tr><td>Total score</td><td>' + latestMidas.totalScore + '</td></tr><tr><td>Grade</td><td>' + latestMidas.grade + ' of 4</td></tr></table>' +
+      '<div class="disclaimer">Aura is a wellness device. It does not diagnose or treat migraine. Not a substitute for clinical evaluation.</div>' +
+      '</div>';
+    html += '<div class="sheet-actions" style="margin-top:14px"><button class="go" style="flex:1" data-action="closePdfPreview">Close</button></div>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderSettings() {
+    var html = renderStatusline() + '<div class="screen-body"><h2>Settings</h2>';
+
+    html += '<div class="card"><h3>Research mode</h3><p class="caption" style="margin:0 0 8px">Opt-in. Anonymous first-wear usability survey and an anonymized export.</p>';
+    html += switchRow('Enable research mode', state.researchMode, 'toggleResearch');
+    if (state.researchMode) {
+      html += '<button class="btn-secondary" data-action="openResearchSurvey">Take first-wear survey</button>';
+    }
+    html += '</div>';
+
+    html += '<div class="card"><h3>Diary</h3>' + switchRow('Track menstrual cycle day', state.trackCycle, 'toggleCycle') + '</div>';
+    html += '<div class="card"><h3>Notifications</h3>' + switchRow('Pain check-in & MIDAS reminders', state.notifications, 'toggleNotifs') + '</div>';
+
+    html += '<div class="card"><h3>Device</h3><p class="caption" style="margin:0 0 8px">This prototype always runs against a simulated headband — no hardware needed.</p>' +
+      switchRow('Simulate headband', true, 'noop') + '</div>';
+
+    html += '<div class="card"><h3>About</h3><button class="btn-secondary" data-action="openSafety">Safety information</button></div>';
+    html += '<div class="card"><h3>Data</h3><p class="caption" style="margin:0 0 10px">All data stays on this device. Nothing syncs to a server unless you explicitly export it.</p>' +
+      '<button class="btn-big danger" style="min-height:52px;font-size:14px">Clear all data</button></div>';
+
+    html += '</div>';
+    html += renderSafetySheet();
+    html += renderResearchSurveySheet();
+    html += renderTabbar();
+    return html;
+  }
+
+  function switchRow(label, on, action) {
+    return '<div class="switch-row"><div class="switch-text"><div class="title">' + label + '</div></div>' +
+      '<button class="switch ' + (on ? 'on' : '') + '" data-action="' + action + '"></button></div>';
+  }
+  actions.noop = function () {};
+
+  function renderSafetySheet() {
+    var open = state.showSafety;
+    return '<div class="sheet-overlay ' + (open ? 'open' : '') + '"><div class="sheet">' + renderFirstLaunch().replace('data-action="acknowledgeFirstLaunch">I understand', 'data-action="closeSafety">Close') + '</div></div>';
+  }
+
+  function renderResearchSurveySheet() {
+    var open = state.showResearchSurvey;
+    var qs = [
+      ['donning', 'Ease of putting it on', 'Hard', 'Easy'],
+      ['comfort', 'Comfort', 'Poor', 'Great'],
+      ['pressure', 'Perceived pressure', 'Too light', 'Too strong'],
+      ['soothing', 'Perceived soothing effect', 'None', 'Strong'],
+      ['discreteness', 'Discreteness', 'Obvious', 'Discreet'],
+    ];
+    var html = '<div class="sheet-overlay ' + (open ? 'open' : '') + '"><div class="sheet">';
+    html += '<h3>First-wear feedback</h3><div class="lede">Anonymous — no name, email, or device ID collected.</div>';
+    qs.forEach(function (q) {
+      html += '<div class="likert"><div class="q">' + q[1] + '</div><div class="likert-row"><span class="likert-end">' + q[2] + '</span>' +
+        [1,2,3,4,5].map(function (n) {
+          return '<button class="likert-dot ' + (state.likert[q[0]] === n ? 'active' : '') + '" data-action="setLikert" data-arg="' + q[0] + '" data-arg2="' + n + '">' + n + '</button>';
+        }).join('') + '<span class="likert-end" style="text-align:right">' + q[3] + '</span></div></div>';
+    });
+    html += '<textarea placeholder="Optional free-text feedback"></textarea>';
+    html += '<div class="sheet-actions"><button class="skip" data-action="closeResearchSurvey">Not now</button><button class="go" data-action="submitResearchSurvey">Submit</button></div>';
+    html += '</div></div>';
+    return html;
+  }
+
+  /* ======================= root render ======================= */
+  function render() {
+    var screenEl = el('#screen');
+    if (!state.firstLaunchAcked) {
+      screenEl.innerHTML = renderFirstLaunch();
+      return;
+    }
+    var body;
+    if (state.tab === 'attack') body = renderAttack();
+    else if (state.tab === 'insights') body = renderInsights();
+    else if (state.tab === 'diary') body = renderDiary();
+    else if (state.tab === 'export') body = renderExport();
+    else body = renderSettings();
+    screenEl.innerHTML = body;
+
+    if (state.sessionPhase === 'active' || state.sessionPhase === 'cooldown') startTicking();
+    else stopTicking();
+  }
+
+  render();
+  setInterval(function () {
+    var clockEl = document.querySelector('.statusline .clock');
+    if (clockEl) clockEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }, 15000);
+})();
+</script>
