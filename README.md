@@ -9,6 +9,12 @@ which modality works for them, and produces a clinically usable headache diary.
 first-launch screen (`src/screens/FirstLaunchScreen.tsx`) for the full disclaimer
 and red-flag symptom guidance shown to every user before first use.
 
+## Visual prototype (no build required)
+
+Want to show someone what the app looks like without setting up React
+Native? [`prototype/index.html`](prototype/index.html) is a standalone,
+click-through mockup of every screen — open it directly in a browser.
+
 ## Trying it without a headband
 
 Don't have the physical device yet? Settings → **Device → "Simulate headband"**
