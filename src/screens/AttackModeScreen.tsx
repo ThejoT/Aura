@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   BigButton,
   DeviceStatusBar,
@@ -35,10 +36,18 @@ export function AttackModeScreen() {
   const [dismissedMoh, setDismissedMoh] = useState(false);
   const [activeCheckIn, setActiveCheckIn] = useState<null | { sessionId: string; atMinutes: 30 | 120 }>(null);
 
-  useEffect(() => {
-    ble.connect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Re-attempts on every focus, not just first mount — otherwise turning on
+  // Settings → "Simulate headband" (or plugging in a real device) after this
+  // screen already tried and failed to connect would need an app restart to
+  // take effect, since bottom-tab screens stay mounted when you switch tabs.
+  useFocusEffect(
+    useCallback(() => {
+      if (ble.connection === 'disconnected') {
+        ble.connect();
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ble.connection]),
+  );
 
   const canShowBanners = session.phase !== 'active';
   const nextCheckIn = canShowBanners ? session.pendingCheckIns[0] : null;

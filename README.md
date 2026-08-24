@@ -9,6 +9,15 @@ which modality works for them, and produces a clinically usable headache diary.
 first-launch screen (`src/screens/FirstLaunchScreen.tsx`) for the full disclaimer
 and red-flag symptom guidance shown to every user before first use.
 
+## Trying it without a headband
+
+Don't have the physical device yet? Settings → **Device → "Simulate headband"**
+connects to a fake in-app device instead of scanning for real BLE hardware —
+Attack Mode's connect/start/stop flow, battery display, and everything
+downstream of it (Insights, Diary, Export) all work normally. Turn it back off
+once you have a real headband to pair with. This never sends anything over
+real BLE; see `src/ble/BleManagerService.ts` (`connectSimulated`).
+
 ## Design principle
 
 The app is designed for a user who is mid-migraine, photophobic, and has one
