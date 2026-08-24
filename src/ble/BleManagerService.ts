@@ -23,6 +23,9 @@ interface Snapshot {
 }
 
 const SCAN_TIMEOUT_MS = 15_000;
+const SIMULATED_CONNECT_DELAY_MS = 600;
+const SIMULATED_DRAIN_INTERVAL_MS = 45_000;
+const SIMULATED_DEVICE_NAME = `${DEVICE_NAME_PREFIX}SIM (simulated)`;
 
 /**
  * Thin wrapper around react-native-ble-plx exposing a plain pub-sub snapshot
@@ -36,6 +39,8 @@ class BleManagerServiceImpl {
   private disconnectSub: Subscription | null = null;
   private batterySub: Subscription | null = null;
   private listeners = new Set<() => void>();
+  private simulationMode = false;
+  private simulationDrainInterval: ReturnType<typeof setInterval> | null = null;
   private snapshot: Snapshot = {
     connection: 'disconnected',
     batteryPct: null,
@@ -72,8 +77,49 @@ class BleManagerServiceImpl {
     });
   }
 
+  /**
+   * Toggle simulated-device mode (Settings → "Simulate headband"). Lets
+   * someone exercise the full Attack Mode session flow — connect, start,
+   * intensity changes, battery display — without owning a real ESP32
+   * headband. No real BLE calls happen while this is on. Switches by
+   * disconnecting whatever is currently active first, so flipping the
+   * toggle mid-connection never leaves a stale connection behind.
+   */
+  async setSimulationMode(enabled: boolean): Promise<void> {
+    if (this.simulationMode === enabled) return;
+    await this.disconnect();
+    this.simulationMode = enabled;
+  }
+
+  isSimulationMode(): boolean {
+    return this.simulationMode;
+  }
+
+  private async connectSimulated(): Promise<boolean> {
+    this.setSnapshot({ connection: 'connecting', lastError: null });
+    await new Promise<void>(resolve => setTimeout(resolve, SIMULATED_CONNECT_DELAY_MS));
+
+    const startingBattery = 60 + Math.floor(Math.random() * 36); // 60-95%
+    this.setSnapshot({ connection: 'connected', deviceName: SIMULATED_DEVICE_NAME, batteryPct: startingBattery, lastError: null });
+
+    this.simulationDrainInterval = setInterval(() => {
+      const current = this.snapshot.batteryPct ?? startingBattery;
+      this.setSnapshot({ batteryPct: Math.max(5, current - 1) });
+    }, SIMULATED_DRAIN_INTERVAL_MS);
+
+    return true;
+  }
+
+  private stopSimulationDrain(): void {
+    if (this.simulationDrainInterval) {
+      clearInterval(this.simulationDrainInterval);
+      this.simulationDrainInterval = null;
+    }
+  }
+
   async connect(): Promise<boolean> {
     if (this.snapshot.connection === 'connected' || this.snapshot.connection === 'connecting') return true;
+    if (this.simulationMode) return this.connectSimulated();
 
     const granted = await requestBlePermissions();
     if (!granted) {
@@ -157,6 +203,12 @@ class BleManagerServiceImpl {
   }
 
   async disconnect(): Promise<void> {
+    if (this.simulationMode) {
+      this.stopSimulationDrain();
+      this.setSnapshot({ connection: 'disconnected', batteryPct: null, deviceName: null });
+      return;
+    }
+
     this.disconnectSub?.remove();
     this.batterySub?.remove();
     if (this.device) {
@@ -190,6 +242,7 @@ class BleManagerServiceImpl {
   }
 
   destroy(): void {
+    this.stopSimulationDrain();
     this.disconnectSub?.remove();
     this.batterySub?.remove();
     this.manager.destroy();

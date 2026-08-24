@@ -9,6 +9,7 @@ export const SETTINGS_KEYS = {
   notificationsEnabled: 'notifications_enabled',
   lastMidasCompletedAt: 'last_midas_completed_at',
   cooldownUntil: 'cooldown_until',
+  simulateDevice: 'simulate_device',
 } as const;
 
 export async function getSetting(key: string): Promise<string | null> {

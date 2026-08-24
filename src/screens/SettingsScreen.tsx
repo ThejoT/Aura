@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { BigButton, SafetyDisclaimer, SectionCard } from '../components';
 import { ResearchSurveyModal } from './Settings/ResearchSurveyModal';
 import { getDb, settingsRepo } from '../db';
+import { bleService } from '../ble';
 import { requestNotificationPermission } from '../services/notificationService';
 import { shareAnonymizedResearchExport } from '../services/researchExport';
 import { colors, typography, spacing } from '../theme';
@@ -13,18 +14,21 @@ export function SettingsScreen() {
   const [researchMode, setResearchMode] = useState(false);
   const [trackCycle, setTrackCycle] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [simulateDevice, setSimulateDeviceState] = useState(false);
   const [showSafety, setShowSafety] = useState(false);
   const [showSurvey, setShowSurvey] = useState(false);
 
   const load = useCallback(async () => {
-    const [research, cycle, notifs] = await Promise.all([
+    const [research, cycle, notifs, simulate] = await Promise.all([
       settingsRepo.getBoolSetting(settingsRepo.SETTINGS_KEYS.researchModeEnabled),
       settingsRepo.getBoolSetting(settingsRepo.SETTINGS_KEYS.trackMenstrualCycle),
       settingsRepo.getBoolSetting(settingsRepo.SETTINGS_KEYS.notificationsEnabled),
+      settingsRepo.getBoolSetting(settingsRepo.SETTINGS_KEYS.simulateDevice),
     ]);
     setResearchMode(research);
     setTrackCycle(cycle);
     setNotificationsEnabled(notifs);
+    setSimulateDeviceState(simulate);
   }, []);
 
   useFocusEffect(
@@ -52,6 +56,12 @@ export function SettingsScreen() {
     }
     setNotificationsEnabled(false);
     await settingsRepo.setBoolSetting(settingsRepo.SETTINGS_KEYS.notificationsEnabled, false);
+  };
+
+  const toggleSimulateDevice = async (on: boolean) => {
+    setSimulateDeviceState(on);
+    await settingsRepo.setBoolSetting(settingsRepo.SETTINGS_KEYS.simulateDevice, on);
+    await bleService.setSimulationMode(on);
   };
 
   const confirmClearData = () => {
@@ -102,6 +112,13 @@ export function SettingsScreen() {
 
         <SectionCard title="Notifications">
           <Row label="Pain check-in & MIDAS reminders" value={notificationsEnabled} onChange={toggleNotifications} />
+        </SectionCard>
+
+        <SectionCard
+          title="Device"
+          caption="No headband yet? Simulate one to try Attack Mode — connect, start a session, and see battery/connection status — without real hardware. Turn this off once you have a real headband to pair."
+        >
+          <Row label="Simulate headband" value={simulateDevice} onChange={toggleSimulateDevice} />
         </SectionCard>
 
         <SectionCard title="About">

@@ -12,6 +12,7 @@ import { FirstLaunchScreen } from './src/screens/FirstLaunchScreen';
 import { ResearchSurveyModal } from './src/screens/Settings/ResearchSurveyModal';
 import { SessionProvider, useSession } from './src/state/SessionContext';
 import { settingsRepo, sessionsRepo } from './src/db';
+import { bleService } from './src/ble';
 import { colors } from './src/theme';
 
 const NAV_THEME = {
@@ -30,7 +31,16 @@ function AppShell() {
   const [firstLaunchAcked, setFirstLaunchAcked] = useState<boolean | null>(null);
 
   useEffect(() => {
-    settingsRepo.getBoolSetting(settingsRepo.SETTINGS_KEYS.firstLaunchAcked).then(setFirstLaunchAcked);
+    (async () => {
+      const [acked, simulate] = await Promise.all([
+        settingsRepo.getBoolSetting(settingsRepo.SETTINGS_KEYS.firstLaunchAcked),
+        settingsRepo.getBoolSetting(settingsRepo.SETTINGS_KEYS.simulateDevice),
+      ]);
+      // Set before any screen mounts and calls bleService.connect(), so Attack Mode
+      // connects to the simulated device from the very first render when this is on.
+      await bleService.setSimulationMode(simulate);
+      setFirstLaunchAcked(acked);
+    })();
   }, []);
 
   const acknowledge = async () => {
