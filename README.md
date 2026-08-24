@@ -88,13 +88,18 @@ npm run lint
 ```
 
 `npm test` and `npx tsc --noEmit` and `npx eslint . --ext .ts,.tsx` all pass
-as of this commit — verified in this environment. **The app itself has not
-been run on a simulator, emulator, or device** — this sandbox has no
-iOS/Android runtime, so build/runtime correctness on an actual device is
-unverified beyond static typechecking, linting, and the mocked-native-modules
-Jest smoke test in `jest.setup.js`. Before shipping: run on both platforms,
-pair with real (or mocked) ESP32 firmware, and confirm the BLE UUIDs in
-`src/ble/protocol.ts` against the firmware's actual GATT table.
+as of this commit — verified in this environment. The dependency-free logic
+in `src/services/__tests__/` and `src/ble/__tests__/` (session timing,
+efficacy math, medication-overuse thresholds, correlation, MIDAS scoring,
+BLE command encoding) has real unit test coverage and is runtime-verified —
+47 tests passing. **The app itself has not been run on a simulator,
+emulator, or device** — this sandbox has no iOS/Android runtime, so
+build/runtime correctness on an actual device is unverified beyond that,
+plus static typechecking, linting, and the mocked-native-modules Jest smoke
+test in `jest.setup.js` for the UI/native-integration layers. Before
+shipping: run on both platforms, pair with real (or mocked) ESP32 firmware,
+and confirm the BLE UUIDs in `src/ble/protocol.ts` against the firmware's
+actual GATT table.
 
 ## Permissions
 
